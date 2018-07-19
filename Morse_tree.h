@@ -27,8 +27,9 @@ public:
 		root(new BTNode<Item_Type>(the_data, left_child.root,
 			right_child.root)) {}
 
-	//Build tree function called by Coder
-	MorseTree<Item_Type> build_tree(map<string, string>& morse_map);
+
+	bool insert(const Item_Type& item, const Item_Type& code);
+
 
 	//Decode function 
 	//Returns string
@@ -42,80 +43,27 @@ public:
 
 private: 
 
-	MorseTree<Item_Type> build_subtree(map<string, string>& local_map, string& code,
-		map<string, string>::iterator current);
+	bool insert(BTNode<Item_Type>*& local_root, const Item_Type& item, const Item_Type& code, int current);
 
 	string find_letter(const BTNode<Item_Type>* local_root, const string& code);
 
-	bool has_left_subtree(std::string& code, map<string, string>& local_map) {
-		std::string temp = code + ".";
-		return local_map.find(temp) != local_map.end();
+	bool is_dot(const char item) {
+		if (item == '.')
+			return true;
+		else
+			return false;
 	}
 
-	bool has_right_subtree(std::string& code, map<string, string>& local_map) {
-		std::string temp = code + "_";
-		return local_map.find(temp) != local_map.end();
-	}
-
-	std::string get_left_code(std::string code) {
-		return code += ".";
-	}
-
-	std::string get_right_code(std::string code) {
-		return code += "_";
+	bool is_dash(const char item) {
+		if (item == '_')
+			return true;
+		else
+			return false;
 	}
 
 
 };  // End MorseTree
 
-//Public tree building wrapper function
-template <typename Item_Type>
-MorseTree<Item_Type> MorseTree<Item_Type>::build_tree(map<string, string>& morse_map) {
-	auto i = morse_map.begin();
-	string code = "";
-	MorseTree<Item_Type> tree = build_subtree(morse_map, code, i);
-	setRoot(tree.getRoot());
-	return tree;
-}
-
-//build subtree
-template <typename Item_Type>
-MorseTree<Item_Type> MorseTree<Item_Type>::build_subtree(map<string, string>& local_map, string& code, 
-	map<string, string>::iterator current) {
-	//terminates build subtree once all items have been used
-	if (current == local_map.end()) {
-		string dummy = 0;
-		return MorseTree<Item_Type>(dummy, NULL, NULL);
-	}
-	//build leaf nodes
-	if (code.size() == 4 ||
-		(!has_left_subtree(code, local_map) && !has_right_subtree(code, local_map))) {
-		return MorseTree<Item_Type>(local_map[code], NULL, NULL);
-	}
-	//build internal nodes
-	if (has_left_subtree(code, local_map) && has_right_subtree(code, local_map)) {
-		string left_code = get_left_code(code);
-		MorseTree<Item_Type> left_tree = build_subtree(local_map, left_code, current++);
-		string right_code = get_right_code(code);
-		MorseTree<Item_Type> right_tree = build_subtree(local_map, right_code, current++);
-		return MorseTree<Item_Type>(local_map[code], left_tree, right_tree);
-	}
-	//build nodes that only have one child
-	if (has_left_subtree(code, local_map) && !has_right_subtree(code, local_map)) {
-		string left_code = get_left_code(code);
-		MorseTree<Item_Type> left_tree = build_subtree(local_map, left_code, current++);
-		MorseTree<Item_Type> right_tree;
-		return MorseTree<Item_Type>(local_map[code], left_tree, right_tree);
-	}
-	//build nodes that only have one child
-	if (!has_left_subtree(code, local_map) && has_right_subtree(code, local_map)) {
-		MorseTree<Item_Type> left_tree;
-		string right_code = get_right_code(code);
-		MorseTree<Item_Type> right_tree = build_subtree(local_map, right_code, current++);
-		return MorseTree<Item_Type>(local_map[code], left_tree, right_tree);
-	}
-
-}
 //decode wrapper function
 template <typename Item_Type>
 string MorseTree<Item_Type>::decode(const string& morse) {
@@ -140,11 +88,11 @@ string MorseTree<Item_Type>::find_letter(const BTNode<Item_Type>* local_root, co
 	char next_char;
 	while (strm >> next_char) {
 		//if the char is a dot go left
-		if (next_char == '.') {
+		if (is_dot(next_char)) {
 			local_root = local_root->left;
 		}
 		//if the char is a dash go right
-		else if (next_char == '_') {
+		else if (is_dash(next_char)) {
 			local_root = local_root->right;
 		}
 		else {
@@ -155,6 +103,37 @@ string MorseTree<Item_Type>::find_letter(const BTNode<Item_Type>* local_root, co
 	//and append it to the result
 	string result = local_root->to_string();
 	return result;
+}
+template <typename Item_Type>
+bool MorseTree<Item_Type>::insert(const Item_Type& item, const Item_Type& code) {
+	int current = 0;
+	return insert(this->root, item, code, current);
+}
+
+template <typename Item_Type>
+bool MorseTree<Item_Type>::insert(BTNode<Item_Type>*& local_root, const Item_Type& item,
+	const Item_Type& code, int current) {
+	//create dummy roots for letters that haven't been inserted yet
+	if (local_root == NULL) {
+		Item_Type dummy;
+		local_root = new BTNode<Item_Type>(dummy);
+	}
+	//once you have reached destination insert data
+	if (current == code.size()) {
+			local_root->data = item;
+			return true;
+	}
+	//if you're not at the final location recursively traverse tree
+	else {
+		if (is_dot(code[current])) {
+			return insert(local_root->left, item, code, ++current);
+		}
+		else if (is_dash(code[current])) {
+			return insert(local_root->right, item, code, ++current);
+		}
+		else
+			return false;
+	}
 }
 #endif
 

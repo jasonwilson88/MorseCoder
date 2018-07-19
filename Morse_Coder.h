@@ -28,9 +28,6 @@ private:
 	//morse tree
 	MorseTree<string> tree;
 
-	//map used to build tree (code, letter)
-	map<string, string> BuildMap;
-
 	//map used for encoding (letter, code)
 	map<string, string> MorseMap;
 
@@ -39,7 +36,7 @@ private:
 };
 
 MorseTree<string> MorseCoder::build(const string& source_name) {
-
+	tree.root = new BTNode<string>("");
 	this->source_name = source_name;
 	std::ifstream in(source_name.c_str());
 	if (in) {
@@ -50,14 +47,14 @@ MorseTree<string> MorseCoder::build(const string& source_name) {
 			string letter = line.substr(0, 1);
 			//get the code from the rest of the line
 			string code = line.substr(1);
-			//insert letter and codes in maps
-			BuildMap.insert({ code, letter });
+			//insert
 			MorseMap.insert({ letter, code });
+			tree.insert(letter, code);
 
 		}
 	}
 	//send the buildmap to morse tree build function
-	MorseTree<string> local_tree = tree.build_tree(BuildMap);
+	MorseTree<string> local_tree = tree;
 	return local_tree;
 }
 
