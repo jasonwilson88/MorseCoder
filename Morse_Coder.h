@@ -53,9 +53,7 @@ MorseTree<string> MorseCoder::build(const string& source_name) {
 
 		}
 	}
-	//send the buildmap to morse tree build function
-	MorseTree<string> local_tree = tree;
-	return local_tree;
+	return tree;
 }
 
 string MorseCoder::encode(const std::string& letters) {
